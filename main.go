@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var TYPE_SHORT = 1
@@ -25,6 +26,8 @@ var SUPPORTED_VERSIONS = []int{3, 4}
 
 var u = flag.String("u", "", "This can be a url (if started with http/s)")
 var f = flag.String("f", "", "This can be a file path (if started with http/s)")
+var o = flag.String("o", "", "out file")
+var t = flag.Int("t", 15, "timeouts")
 
 func main() {
 	flag.Parse()
@@ -47,7 +50,11 @@ func main() {
 			line = strings.TrimSpace(line)
 			uri_x86 := MSFURI()
 			uri_x64 := MSFURI_X64()
-			beaconinit(line, uri_x86, uri_x64)
+			if *o == "" {
+				beaconinit(line, uri_x86, uri_x64, "NULL")
+			} else {
+				beaconinit(line, uri_x86, uri_x64, *o)
+			}
 			if err != nil {
 				if err == io.EOF {
 					break
@@ -59,17 +66,23 @@ func main() {
 	} else {
 		uri_x86 := MSFURI()
 		uri_x64 := MSFURI_X64()
-		beaconinit(*u, uri_x86, uri_x64)
-
+		if *o == "" {
+			beaconinit(*u, uri_x86, uri_x64, "NULL")
+		} else {
+			beaconinit(*u, uri_x86, uri_x64, *o)
+		}
 	}
 }
 
-func beaconinit(host string, uri_x86 string, uri_x64 string) {
+func beaconinit(host string, uri_x86 string, uri_x64 string, filename string) {
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{
+		Timeout:   time.Duration(*t) * time.Second,
+		Transport: tr,
+	}
 	host_x86 := host + "/" + uri_x86
 	host_x64 := host + "/" + uri_x64
 	resp, err := client.Get(host_x86)
@@ -96,7 +109,7 @@ func beaconinit(host string, uri_x86 string, uri_x64 string) {
 	} else {
 		fmt.Println("trial version")
 	}
-	bodyText := ""
+	bodyMap := make(map[string]string)
 	for _, value := range SUPPORTED_VERSIONS {
 		if value == 3 {
 			offset := bytes.Index(buf, []byte("\x69\x68\x69\x68\x69\x6b")) //3的兼容
@@ -105,7 +118,7 @@ func beaconinit(host string, uri_x86 string, uri_x64 string) {
 				if offset1 != -1 {
 					offset2 := bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x69\x6a"))
 					if offset2 != -1 {
-						bodyText = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
 				}
 			}
@@ -116,13 +129,38 @@ func beaconinit(host string, uri_x86 string, uri_x64 string) {
 				if offset1 != -1 {
 					offset2 := bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
 					if offset2 != -1 {
-						bodyText = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
 				}
 			}
 		}
 	}
-	fmt.Println(bodyText)
+	bodyMap["URL"] = host
+	bodyText := MapToJson(bodyMap)
+	if filename == "NULL" {
+		fmt.Println(bodyText)
+	} else {
+		var f *os.File
+		var err1 error
+		if checkFileIsExist(filename) { //如果文件存在
+			f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
+		} else {
+			f, err1 = os.Create(filename) //创建文件
+		}
+		defer f.Close()
+		fmt.Println(host)
+		defer io.WriteString(f, bodyText) //写入文件(字符串)
+		if err1 != nil {
+			panic(err1)
+		}
+	}
+}
+
+func checkFileIsExist(filename string) bool {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 func checksum8(uri string, n int) bool {
@@ -335,7 +373,7 @@ func binary_repr(p *packedSetting_init_type) []byte {
 	return self_repr
 }
 
-func BeaconSettings(full_config_data []byte) string {
+func BeaconSettings(full_config_data []byte) map[string]string {
 	BEACON_TYPE := map[byte]string{
 		0x0:  "HTTP",
 		0x1:  "Hybrid HTTP DNS",
@@ -457,7 +495,7 @@ func BeaconSettings(full_config_data []byte) string {
 	BeaconConfig["Retry_Max_Attempts"] = pretty_repr(full_config_data, packedSettinginit(71, 2, 0))
 	BeaconConfig["Retry_Increase_Attempts"] = pretty_repr(full_config_data, packedSettinginit(72, 2, 0))
 	BeaconConfig["Retry_Increase_Attempts"] = pretty_repr(full_config_data, packedSettinginit(73, 2, 0))
-	return MapToJson(BeaconConfig)
+	return BeaconConfig
 }
 
 //方法，接受4个值，给s赋值
@@ -717,7 +755,7 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 
 func MapToJson(param map[string]string) string {
 	dataType, _ := json.Marshal(param)
-	dataString := string(dataType)
+	dataString := string(dataType) + "\r\n"
 	return dataString
 }
 
