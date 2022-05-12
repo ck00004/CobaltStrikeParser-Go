@@ -109,6 +109,20 @@ func beaconinit(host string, filename string) {
 	var is_x86 bool = true
 	var is_x64 bool = true
 	var bodyMap map[string]string = make(map[string]string)
+	defer func() {
+		err := recover()
+		if err != nil {
+			if filename == "" {
+				fmt.Println("error:", "beacon config error")
+			} else {
+				fmt.Println("error:", "beacon config error")
+				bodyMap["URL"] = host
+				bodyMap["error"] = "beacon config error"
+				var bodyerror string = MapToJson(bodyMap)
+				JsonFileWrite(filename, bodyerror)
+			}
+		}
+	}()
 	var tr *http.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
