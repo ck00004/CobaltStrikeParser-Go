@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/md5"
 	"crypto/tls"
@@ -8,10 +9,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var TYPE_SHORT = 1
@@ -20,7 +23,8 @@ var TYPE_STR = 3
 
 var SUPPORTED_VERSIONS = []int{3, 4}
 
-var u = flag.String("u", "", "This can be a file path or a url (if started with http/s)")
+var u = flag.String("u", "", "This can be a url (if started with http/s)")
+var f = flag.String("f", "", "This can be a file path (if started with http/s)")
 
 func main() {
 	flag.Parse()
@@ -28,10 +32,36 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	uri_x86 := MSFURI()
-	uri_x64 := MSFURI_X64()
-	//uriX64 := MSFURI_X64()
-	beaconinit(*u, uri_x86, uri_x64)
+	if *f != "" && *u == "" {
+		filepath := *f
+		file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+		if err != nil {
+			fmt.Println("Open file error!", err)
+			return
+		}
+		defer file.Close()
+
+		buf := bufio.NewReader(file)
+		for {
+			line, err := buf.ReadString('\n')
+			line = strings.TrimSpace(line)
+			uri_x86 := MSFURI()
+			uri_x64 := MSFURI_X64()
+			beaconinit(line, uri_x86, uri_x64)
+			if err != nil {
+				if err == io.EOF {
+					break
+				} else {
+					return
+				}
+			}
+		}
+	} else {
+		uri_x86 := MSFURI()
+		uri_x64 := MSFURI_X64()
+		beaconinit(*u, uri_x86, uri_x64)
+
+	}
 }
 
 func beaconinit(host string, uri_x86 string, uri_x64 string) {
