@@ -27,7 +27,7 @@ var SUPPORTED_VERSIONS = []int{3, 4}
 var u = flag.String("u", "", "This can be a url (if started with http/s)")
 var f = flag.String("f", "", "This can be a file path (if started with http/s)")
 var o = flag.String("o", "", "out file")
-var t = flag.Int("t", 15, "timeouts")
+var t = flag.Int("t", 15, "timeouts. default:15")
 
 func main() {
 	flag.Parse()
@@ -50,9 +50,9 @@ func main() {
 			line = strings.TrimSpace(line)
 			uri_x86 := MSFURI()
 			uri_x64 := MSFURI_X64()
-			if *o == "" {
+			if *o == "" && line != "" {
 				beaconinit(line, uri_x86, uri_x64, "NULL")
-			} else {
+			} else if line != "" {
 				beaconinit(line, uri_x86, uri_x64, *o)
 			}
 			if err != nil {
@@ -143,13 +143,19 @@ func beaconinit(host string, uri_x86 string, uri_x64 string, filename string) {
 		var f *os.File
 		var err1 error
 		if checkFileIsExist(filename) { //如果文件存在
-			f, err1 = os.OpenFile(filename, os.O_APPEND, 0666) //打开文件
+			f, err1 = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0666) //打开文件
+			if err1 != nil {
+				panic(err1)
+			}
 		} else {
 			f, err1 = os.Create(filename) //创建文件
+			if err1 != nil {
+				panic(err1)
+			}
 		}
 		defer f.Close()
 		fmt.Println(host)
-		defer io.WriteString(f, bodyText) //写入文件(字符串)
+		_, err1 = f.WriteString(bodyText)
 		if err1 != nil {
 			panic(err1)
 		}
