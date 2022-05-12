@@ -28,7 +28,7 @@ var SUPPORTED_VERSIONS = []int{3, 4}
 var u = flag.String("u", "", "This can be a url (if started with http/s)")
 var f = flag.String("f", "", "This can be a file path (if started with http/s)")
 var o = flag.String("o", "", "out file")
-var t = flag.Int("t", 15, "timeouts. default:15")
+var t = flag.Int("t", 30, "timeouts. default:20")
 var br = flag.Int("br", 1, "thread,import file valid. default:1")
 
 func main() {
@@ -79,7 +79,7 @@ func main() {
 		wg.Wait()
 	} else {
 		if *o == "" {
-			beaconinit(*u, "NULL")
+			beaconinit(*u, "")
 		} else {
 			beaconinit(*u, *o)
 		}
@@ -106,24 +106,24 @@ func beaconinit(host string, filename string) {
 	var err_x64 error
 	var resp *http.Response
 	var err error
-	is_x86 := true
-	is_x64 := true
-	bodyMap := make(map[string]string)
-	tr := &http.Transport{
+	var is_x86 bool = true
+	var is_x64 bool = true
+	var bodyMap map[string]string = make(map[string]string)
+	var tr *http.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client := &http.Client{
+	var client *http.Client = &http.Client{
 		Timeout:   time.Duration(*t) * time.Second,
 		Transport: tr,
 	}
-	host_x86 := host + "/" + MSFURI()
-	host_x64 := host + "/" + MSFURI_X64()
+	var host_x86 string = host + "/" + MSFURI()
+	var host_x64 string = host + "/" + MSFURI_X64()
 	resp, err = client.Get(host_x86)
 	resp_x64, err_x64 = client.Get(host_x64)
 
 	if err != nil || resp.StatusCode != 200 {
 		is_x86 = false
-		if filename == "NULL" {
+		if filename == "" {
 			fmt.Println("error:", err, "beacon stager x86 not found")
 		} else {
 			fmt.Println("error:", err, "beacon stager x86 not found")
@@ -133,13 +133,13 @@ func beaconinit(host string, filename string) {
 			} else {
 				bodyMap["error"] = "beacon stager x86 not found"
 			}
-			bodyerror := MapToJson(bodyMap)
+			var bodyerror string = MapToJson(bodyMap)
 			JsonFileWrite(filename, bodyerror)
 		}
 	}
 	if err_x64 != nil || resp_x64.StatusCode != 200 {
 		is_x64 = false
-		if filename == "NULL" {
+		if filename == "" {
 			fmt.Println("error:", err_x64, "beacon stager x64 not found")
 		} else {
 			fmt.Println("error", err_x64, "beacon stager x64 not found")
@@ -149,13 +149,11 @@ func beaconinit(host string, filename string) {
 			} else {
 				bodyMap["error"] = "beacon stager x64 not found"
 			}
-			bodyerror := MapToJson(bodyMap)
+			var bodyerror string = MapToJson(bodyMap)
 			JsonFileWrite(filename, bodyerror)
 		}
 	}
-	if err != nil && err_x64 != nil {
-		return
-	}
+
 	var body []byte
 	if is_x86 != false {
 		defer resp.Body.Close()
@@ -165,31 +163,41 @@ func beaconinit(host string, filename string) {
 		defer resp_x64.Body.Close()
 		body, _ = ioutil.ReadAll(resp_x64.Body)
 	}
+	if is_x64 == false && is_x86 == false {
+		return
+	}
 
 	var buf []byte
 	if bytes.Index(body, []byte("EICAR-STANDARD-ANTIVIRUS-TEST-FILE")) == -1 {
 		buf = decrypt_beacon(body)
 	} else {
 		fmt.Println("trial version")
+		return
 	}
 	for _, value := range SUPPORTED_VERSIONS {
 		if value == 3 {
-			offset := bytes.Index(buf, []byte("\x69\x68\x69\x68\x69\x6b")) //3的兼容
+			var offset int
+			var offset1 int
+			var offset2 int
+			offset = bytes.Index(buf, []byte("\x69\x68\x69\x68\x69\x6b")) //3的兼容
 			if offset != -1 {
-				offset1 := bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x69\x6b\x69\x68\x69\x6b"))
+				offset1 = bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x69\x6b\x69\x68\x69\x6b"))
 				if offset1 != -1 {
-					offset2 := bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x69\x6a"))
+					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x69\x6a"))
 					if offset2 != -1 {
 						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
 				}
 			}
 		} else if value == 4 {
-			offset := bytes.Index(buf, []byte("\x2e\x2f\x2e\x2f\x2e\x2c")) //4的兼容
+			var offset int
+			var offset1 int
+			var offset2 int
+			offset = bytes.Index(buf, []byte("\x2e\x2f\x2e\x2f\x2e\x2c")) //4的兼容
 			if offset != -1 {
-				offset1 := bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x2e\x2c\x2e\x2f\x2e\x2c"))
+				offset1 = bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x2e\x2c\x2e\x2f\x2e\x2c"))
 				if offset1 != -1 {
-					offset2 := bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
+					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
 					if offset2 != -1 {
 						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
@@ -198,8 +206,8 @@ func beaconinit(host string, filename string) {
 		}
 	}
 	bodyMap["URL"] = host
-	bodyText := MapToJson(bodyMap)
-	if filename == "NULL" {
+	var bodyText string = MapToJson(bodyMap)
+	if filename == "" {
 		fmt.Println(bodyText)
 	} else {
 		fmt.Println(host)
@@ -252,7 +260,7 @@ func checksum8(uri string, n int) bool {
 
 func MSFURI() string {
 	var uri string
-	az19 := "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567899"
+	var az19 string = "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567899"
 	for {
 		uri = string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))])
 		if checksum8(uri, 92) {
@@ -264,7 +272,7 @@ func MSFURI() string {
 
 func MSFURI_X64() string {
 	var uri string
-	az19 := "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567899"
+	var az19 string = "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567899"
 	for {
 		uri = string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))]) + string(az19[rand.Intn(len(az19))])
 		if checksum8(uri, 93) {
@@ -278,18 +286,18 @@ func MSFURI_X64() string {
 func IntToBytes(n int, b int) []byte {
 	switch b {
 	case 1:
-		tmp := int8(n)
-		bytesBuffer := bytes.NewBuffer([]byte{})
+		var tmp int8 = int8(n)
+		var bytesBuffer *bytes.Buffer = bytes.NewBuffer([]byte{})
 		binary.Write(bytesBuffer, binary.BigEndian, &tmp)
 		return bytesBuffer.Bytes()
 	case 2:
-		tmp := int16(n)
-		bytesBuffer := bytes.NewBuffer([]byte{})
+		var tmp int16 = int16(n)
+		var bytesBuffer *bytes.Buffer = bytes.NewBuffer([]byte{})
 		binary.Write(bytesBuffer, binary.BigEndian, &tmp)
 		return bytesBuffer.Bytes()
 	case 3, 4:
-		tmp := int32(n)
-		bytesBuffer := bytes.NewBuffer([]byte{})
+		var tmp int32 = int32(n)
+		var bytesBuffer *bytes.Buffer = bytes.NewBuffer([]byte{})
 		binary.Write(bytesBuffer, binary.BigEndian, &tmp)
 		return bytesBuffer.Bytes()
 	}
@@ -414,13 +422,14 @@ func DefaultpackedSetting_init_type(p *packedSetting_init_type) *packedSetting_i
 }
 
 func packedSettinginit(pos, datatype, length int, options ...packedSetting_init_typeOptions) *packedSetting_init_type {
-	p := &packedSetting_init_type{
+	var p *packedSetting_init_type = &packedSetting_init_type{
 		pos:      pos,
 		datatype: datatype,
 		length:   length,
 	}
 	p = DefaultpackedSetting_init_type(p)
-	for _, op := range options {
+	var op packedSetting_init_typeOptions
+	for _, op = range options {
 		// 遍历调用函数，进行数据修改
 		op(p)
 	}
@@ -438,7 +447,7 @@ func packedSettinginit(pos, datatype, length int, options ...packedSetting_init_
 }
 
 func binary_repr(p *packedSetting_init_type) []byte {
-	self_repr := make([]byte, 6)
+	var self_repr []byte = make([]byte, 6)
 	self_repr = append(self_repr[:1], IntToBytes(p.pos, 1)...)
 	self_repr = append(self_repr[:3], IntToBytes(p.datatype, 1)...)
 	self_repr = append(self_repr[:4], IntToBytes(p.length, 2)...)
@@ -446,7 +455,7 @@ func binary_repr(p *packedSetting_init_type) []byte {
 }
 
 func BeaconSettings(full_config_data []byte) map[string]string {
-	BEACON_TYPE := map[byte]string{
+	var BEACON_TYPE map[byte]string = map[byte]string{
 		0x0:  "HTTP",
 		0x1:  "Hybrid HTTP DNS",
 		0x2:  "SMB",
@@ -454,13 +463,13 @@ func BeaconSettings(full_config_data []byte) map[string]string {
 		0x8:  "HTTPS",
 		0x10: "Bind TCP",
 	}
-	ACCESS_TYPE := map[byte]string{
+	var ACCESS_TYPE map[byte]string = map[byte]string{
 		0x0: "Use proxy server (manual)",
 		0x1: "Use direct connection",
 		0x2: "Use IE settings",
 		0x4: "Use proxy server (credentials)",
 	}
-	EXECUTE_TYPE := map[byte]string{
+	var EXECUTE_TYPE map[byte]string = map[byte]string{
 		0x1: "CreateThread",
 		0x2: "SetThreadContext",
 		0x3: "CreateRemoteThread",
@@ -470,11 +479,11 @@ func BeaconSettings(full_config_data []byte) map[string]string {
 		0x7: "None",
 		0x8: "NtQueueApcThread-s",
 	}
-	ALLOCATION_FUNCTIONS := map[byte]string{
+	var ALLOCATION_FUNCTIONS map[byte]string = map[byte]string{
 		0: "VirtualAllocEx",
 		1: "NtMapViewOfSection",
 	}
-	ROTATE_STRATEGY := map[byte]string{
+	var ROTATE_STRATEGY map[byte]string = map[byte]string{
 		1:  "round-robin",
 		2:  "random",
 		3:  "failover",
@@ -500,7 +509,7 @@ func BeaconSettings(full_config_data []byte) map[string]string {
 		24: "rotate-12h",
 		25: "rotate-1d",
 	}
-	BeaconConfig := make(map[string]string)
+	var BeaconConfig map[string]string = make(map[string]string)
 	BeaconConfig["BeaconType"] = pretty_repr(full_config_data, packedSettinginit(1, 1, 0, Writemask(BEACON_TYPE)))
 	BeaconConfig["Port"] = pretty_repr(full_config_data, packedSettinginit(2, 1, 0))
 	BeaconConfig["SleepTime"] = pretty_repr(full_config_data, packedSettinginit(3, 2, 0))
@@ -577,14 +586,14 @@ func InetNtoA(ip []byte) string {
 }
 
 func BytesToInt(bys []byte) int {
-	bytebuff := bytes.NewBuffer(bys)
+	var bytebuff *bytes.Buffer = bytes.NewBuffer(bys)
 	var data int64
 	binary.Read(bytebuff, binary.BigEndian, &data)
 	return int(data)
 }
 
 func pretty_repr(data []byte, p *packedSetting_init_type) string {
-	data_offset := bytes.Index(data, binary_repr(p))
+	var data_offset int = bytes.Index(data, binary_repr(p))
 	if data_offset < 0 && p.datatype == TYPE_STR { //这里用的是confConsts.TYPE_STR
 		p.length = 16
 		for {
@@ -603,23 +612,25 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 	if data_offset < 0 {
 		return "Not Found"
 	}
-	repr_len := len(binary_repr(p))
-	conf_data := data[data_offset+repr_len : data_offset+repr_len+p.length]
+	var repr_len int = len(binary_repr(p))
+	var conf_data []byte = data[data_offset+repr_len : data_offset+repr_len+p.length]
 	if p.datatype == TYPE_SHORT { //confConsts.TYPE_SHORT:
-		conf_data := binary.BigEndian.Uint16(conf_data)
+		var conf_data uint16 = binary.BigEndian.Uint16(conf_data)
 		if p.isBool {
 			if conf_data == uint16(p.boolFalseValue) {
-				ret := "false"
+				var ret string = "false"
 				return ret
 			} else {
-				ret := "true"
+				var ret string = "true"
 				return ret
 			}
 		} else if len(p.enum) > 0 {
 			return p.enum[byte(conf_data)]
 		} else if len(p.mask) > 0 {
 			var ret_arr string
-			for k, v := range p.mask {
+			var v string
+			var k byte
+			for k, v = range p.mask {
 				if k == 0 && k == byte(conf_data) {
 					ret_arr = ret_arr + " " + v
 				}
@@ -635,11 +646,11 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 		if p.isIpAddress {
 			return InetNtoA(conf_data)
 		} else {
-			conf_data := binary.BigEndian.Uint32(conf_data)
+			var conf_data uint32 = binary.BigEndian.Uint32(conf_data)
 			if p.isDate && (conf_data != 0) {
-				year := fmt.Sprint(conf_data)[0:4]
-				mouth := fmt.Sprint(conf_data)[4:6]
-				day := fmt.Sprint(conf_data)[6:]
+				var year string = fmt.Sprint(conf_data)[0:4]
+				var mouth string = fmt.Sprint(conf_data)[4:6]
+				var day string = fmt.Sprint(conf_data)[6:]
 				return fmt.Sprintf("%v-%v-%v", year, mouth, day)
 			}
 			return fmt.Sprint(conf_data)
@@ -647,24 +658,24 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 	}
 	if p.isBlob {
 		if len(p.enum) > 0 {
-			i := 0
+			var i int = 0
 			var ret_arr string
 			for {
 				if i > len(conf_data) {
 					break
 				}
-				v := conf_data[i]
+				var v byte = conf_data[i]
 				if v == 0 {
 					return ret_arr
 				}
-				ret_arr_tmp := p.enum[v]
+				var ret_arr_tmp string = p.enum[v]
 				if ret_arr_tmp != "None" {
 					ret_arr = ret_arr + " " + ret_arr_tmp
 					i++
 				} else {
 					var ProcInject_Execute_tmp_byte1 []byte
 					var ProcInject_Execute_tmp_byte2 []byte
-					j := i + 3
+					var j int = i + 3
 					for j < len(conf_data) {
 						if conf_data[j] > 20 {
 							ProcInject_Execute_tmp_byte1 = append(ProcInject_Execute_tmp_byte1, conf_data[j])
@@ -694,20 +705,20 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 		}
 	}
 	if p.isProcInjectTransform {
-		conf_data_tmp := make([]byte, len(conf_data))
+		var conf_data_tmp []byte = make([]byte, len(conf_data))
 		if bytes.Compare(conf_data_tmp, conf_data) == 0 {
 			return "Empty"
 		}
 		var ret_arr string
-		prepend_length := binary.BigEndian.Uint32(conf_data[0:4])
-		prepend := conf_data[4 : 4+prepend_length]
-		append_length_offset := 4 + prepend_length
-		append_length := binary.BigEndian.Uint32(conf_data[append_length_offset : append_length_offset+4])
-		append := conf_data[append_length_offset+4 : append_length_offset+4+append_length]
+		var prepend_length uint32 = binary.BigEndian.Uint32(conf_data[0:4])
+		var prepend []byte = conf_data[4 : 4+prepend_length]
+		var append_length_offset uint32 = 4 + prepend_length
+		var append_length uint32 = binary.BigEndian.Uint32(conf_data[append_length_offset : append_length_offset+4])
+		var append []byte = conf_data[append_length_offset+4 : append_length_offset+4+append_length]
 		for i := 0; i < len(prepend); i++ {
 			ret_arr = ret_arr + fmt.Sprintf("\\x%x", prepend[i])
 		}
-		append_length_byte := make([]byte, 4)
+		var append_length_byte []byte = make([]byte, 4)
 		binary.BigEndian.PutUint32(append_length_byte, append_length)
 		if append_length < 256 && bytes.Compare(append_length_byte, append) == 0 {
 			ret_arr = ret_arr + " " + fmt.Sprintln(append)
@@ -718,16 +729,16 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 	}
 	if p.isMalleableStream {
 		var prog string = ""
-		buf := bytes.NewBuffer(conf_data)
+		var buf *bytes.Buffer = bytes.NewBuffer(conf_data)
 		for {
-			op := read_dword_be(buf, 4)
+			var op int = read_dword_be(buf, 4)
 			if op == 0 {
 				break
 			} else if op == 1 {
-				l := read_dword_be(buf, 4)
+				var l int = read_dword_be(buf, 4)
 				prog = prog + " " + fmt.Sprintf("Remove %v bytes from the end", l)
 			} else if op == 2 {
-				l := read_dword_be(buf, 4)
+				var l int = read_dword_be(buf, 4)
 				prog = prog + " " + fmt.Sprintf("Remove %v bytes from the beginning", l)
 			} else if op == 3 {
 				prog = prog + " " + fmt.Sprintf("Base64 decode")
@@ -744,19 +755,19 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 		return prog
 	}
 	if p.hashBlob {
-		x := fmt.Sprintf("%x", md5.Sum(bytes.TrimRight(conf_data, "\x00")))
+		var x string = fmt.Sprintf("%x", md5.Sum(bytes.TrimRight(conf_data, "\x00")))
 		return x
 	}
 	if p.isHeaders {
 		var current_category string
-		trans := map[string]string{
+		var trans map[string]string = map[string]string{
 			"ConstHeaders": "",
 			"ConstParams":  "",
 			"Metadata":     "",
 			"SessionId":    "",
 			"Output":       "",
 		}
-		TSTEPS := map[int]string{
+		var TSTEPS map[int]string = map[int]string{
 			1:  "append ",
 			2:  "prepend ",
 			3:  "base64 ",
@@ -774,15 +785,15 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 			15: "mask ",
 			16: "const_host_header ",
 		}
-		buf := bytes.NewBuffer(conf_data)
+		var buf *bytes.Buffer = bytes.NewBuffer(conf_data)
 		current_category = "Constants"
-		intarr := []int{1, 2, 5, 6}
-		intarr2 := []int{10, 16, 9}
-		intarr3 := []int{3, 4, 13, 8, 11, 12, 15}
+		var intarr []int = []int{1, 2, 5, 6}
+		var intarr2 []int = []int{10, 16, 9}
+		var intarr3 []int = []int{3, 4, 13, 8, 11, 12, 15}
 		for {
-			tstep := read_dword_be(buf, 4)
+			var tstep int = read_dword_be(buf, 4)
 			if tstep == 7 {
-				name := read_dword_be(buf, 4)
+				var name int = read_dword_be(buf, 4)
 				if p.pos == 12 {
 					current_category = "Metadata"
 				} else {
@@ -793,16 +804,16 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 					}
 				}
 			} else if IsContain(intarr, tstep) {
-				length := read_dword_be(buf, 4)
-				c := make([]byte, length)
+				var length int = read_dword_be(buf, 4)
+				var c []byte = make([]byte, length)
 				buf.Read(c)
 				step_data := string(c)
 				trans[current_category] = trans[current_category] + TSTEPS[tstep] + " \"" + step_data + "\""
 			} else if IsContain(intarr2, tstep) {
-				length := read_dword_be(buf, 4)
-				c := make([]byte, length)
+				var length int = read_dword_be(buf, 4)
+				var c []byte = make([]byte, length)
 				buf.Read(c)
-				step_data := string(c)
+				var step_data string = string(c)
 				if tstep == 9 {
 					trans["ConstParams"] = trans["ConstParams"] + " " + step_data
 				} else {
@@ -821,7 +832,7 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 		}
 		return MapToJson(trans)
 	}
-	conf_data_tmp := bytes.TrimRight(conf_data, "\x00")
+	var conf_data_tmp []byte = bytes.TrimRight(conf_data, "\x00")
 	return string(conf_data_tmp)
 }
 
@@ -832,13 +843,14 @@ func MapToJson(param map[string]string) string {
 }
 
 func read_dword_be(data *bytes.Buffer, length int) int {
-	c := make([]byte, length)
+	var c []byte = make([]byte, length)
 	data.Read(c)
 	return int(binary.BigEndian.Uint32(c))
 }
 
 func IsContain(items []int, item int) bool {
-	for _, eachItem := range items {
+	var eachItem int
+	for _, eachItem = range items {
 		if eachItem == item {
 			return true
 		}
@@ -861,39 +873,39 @@ func decode_config(data_buf []byte, version int) []byte {
 }
 
 func decrypt_beacon(buf []byte) []byte {
-	offset := bytes.Index(buf, []byte("\xff\xff\xff"))
+	var offset int = bytes.Index(buf, []byte("\xff\xff\xff"))
 	if offset == -1 {
 		return nil
 	}
 
 	offset += 3
 
-	key := binary.LittleEndian.Uint32(buf[offset : offset+4])
+	var key uint32 = binary.LittleEndian.Uint32(buf[offset : offset+4])
 	//fmt.Println("key", key)
 
 	//size := binary.LittleEndian.Uint32(buf[offset+4:offset+8]) ^ key
 	//fmt.Println("size", size)
 
-	head_enc := binary.LittleEndian.Uint32(buf[offset+8:offset+12]) ^ key
+	var head_enc uint32 = binary.LittleEndian.Uint32(buf[offset+8:offset+12]) ^ key
 	//fmt.Println("head_enc", head_enc)
 
-	head := head_enc & 0xffff
+	var head uint32 = head_enc & 0xffff
 	//fmt.Println("head", head)
 
 	if head == 0x5a4d || head == 0x9090 {
 
 		var decoded_data []byte
 		for i := offset/4 + 2; i <= len(buf)/4-4; i++ {
-			a := binary.LittleEndian.Uint32(buf[i*4 : i*4+4])
+			var a uint32 = binary.LittleEndian.Uint32(buf[i*4 : i*4+4])
 			//fmt.Println("a", a)
 
-			b := binary.LittleEndian.Uint32(buf[i*4+4 : i*4+8])
+			var b uint32 = binary.LittleEndian.Uint32(buf[i*4+4 : i*4+8])
 			//fmt.Println("b", b)
 
-			c := a ^ b
+			var c uint32 = a ^ b
 			//fmt.Println("c", c)
 
-			tmp := make([]byte, 4)
+			var tmp []byte = make([]byte, 4)
 			binary.LittleEndian.PutUint32(tmp, c)
 			decoded_data = append(decoded_data, tmp...)
 
