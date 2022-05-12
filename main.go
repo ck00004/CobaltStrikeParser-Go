@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -28,6 +29,7 @@ var u = flag.String("u", "", "This can be a url (if started with http/s)")
 var f = flag.String("f", "", "This can be a file path (if started with http/s)")
 var o = flag.String("o", "", "out file")
 var t = flag.Int("t", 15, "timeouts. default:15")
+var br = flag.Int("br", 1, "thread,import file valid. default:1")
 
 func main() {
 	flag.Parse()
@@ -36,6 +38,11 @@ func main() {
 		os.Exit(1)
 	}
 	if *f != "" && *u == "" {
+		var wg sync.WaitGroup
+		var ChanUrlList chan string
+		var num = 0
+		var mutex sync.Mutex
+		var urllist []string
 		filepath := *f
 		file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
 		if err != nil {
@@ -48,12 +55,8 @@ func main() {
 		for {
 			line, err := buf.ReadString('\n')
 			line = strings.TrimSpace(line)
-			uri_x86 := MSFURI()
-			uri_x64 := MSFURI_X64()
-			if *o == "" && line != "" {
-				beaconinit(line, uri_x86, uri_x64, "NULL")
-			} else if line != "" {
-				beaconinit(line, uri_x86, uri_x64, *o)
+			if line != "" {
+				urllist = append(urllist, line)
 			}
 			if err != nil {
 				if err == io.EOF {
@@ -63,19 +66,49 @@ func main() {
 				}
 			}
 		}
+		ChanUrlList = make(chan string, len(urllist))
+		for filelen := 0; filelen < len(urllist); filelen++ {
+			ChanUrlList <- urllist[filelen]
+		}
+		for i := 0; i < *br; i++ {
+			wg.Add(1)
+			go BeaconInitThread(&wg, &num, &mutex, ChanUrlList, *o)
+		}
+
+		close(ChanUrlList)
+		wg.Wait()
 	} else {
-		uri_x86 := MSFURI()
-		uri_x64 := MSFURI_X64()
 		if *o == "" {
-			beaconinit(*u, uri_x86, uri_x64, "NULL")
+			beaconinit(*u, "NULL")
 		} else {
-			beaconinit(*u, uri_x86, uri_x64, *o)
+			beaconinit(*u, *o)
 		}
 	}
 }
 
-func beaconinit(host string, uri_x86 string, uri_x64 string, filename string) {
+func BeaconInitThread(wg *sync.WaitGroup, num *int, mutex *sync.Mutex, ChanUrlList chan string, filename string) {
+	defer wg.Done()
+	for one := range ChanUrlList {
+		go incrNum(num, mutex)
+		host := one
+		beaconinit(host, filename)
+	}
+}
 
+func incrNum(num *int, mutex *sync.Mutex) {
+	mutex.Lock()
+	*num = *num + 1
+	mutex.Unlock()
+}
+
+func beaconinit(host string, filename string) {
+	var resp_x64 *http.Response
+	var err_x64 error
+	var resp *http.Response
+	var err error
+	is_x86 := true
+	is_x64 := true
+	bodyMap := make(map[string]string)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -83,33 +116,62 @@ func beaconinit(host string, uri_x86 string, uri_x64 string, filename string) {
 		Timeout:   time.Duration(*t) * time.Second,
 		Transport: tr,
 	}
-	host_x86 := host + "/" + uri_x86
-	host_x64 := host + "/" + uri_x64
-	resp, err := client.Get(host_x86)
-	resp_x64, err_x64 := client.Get(host_x64)
+	host_x86 := host + "/" + MSFURI()
+	host_x64 := host + "/" + MSFURI_X64()
+	resp, err = client.Get(host_x86)
+	resp_x64, err_x64 = client.Get(host_x64)
 
-	if err != nil || err_x64 != nil {
-		fmt.Println("error:", err)
+	if err != nil || resp.StatusCode != 200 {
+		is_x86 = false
+		if filename == "NULL" {
+			fmt.Println("error:", err, "beacon stager x86 not found")
+		} else {
+			fmt.Println("error:", err, "beacon stager x86 not found")
+			bodyMap["URL"] = host
+			if err != nil {
+				bodyMap["error"] = err.Error() + "beacon stager x86 not found"
+			} else {
+				bodyMap["error"] = "beacon stager x86 not found"
+			}
+			bodyerror := MapToJson(bodyMap)
+			JsonFileWrite(filename, bodyerror)
+		}
+	}
+	if err_x64 != nil || resp_x64.StatusCode != 200 {
+		is_x64 = false
+		if filename == "NULL" {
+			fmt.Println("error:", err_x64, "beacon stager x64 not found")
+		} else {
+			fmt.Println("error", err_x64, "beacon stager x64 not found")
+			bodyMap["URL"] = host
+			if err_x64 != nil {
+				bodyMap["error"] = err_x64.Error() + "beacon stager x64 not found"
+			} else {
+				bodyMap["error"] = "beacon stager x64 not found"
+			}
+			bodyerror := MapToJson(bodyMap)
+			JsonFileWrite(filename, bodyerror)
+		}
+	}
+	if err != nil && err_x64 != nil {
 		return
 	}
-	defer resp.Body.Close()
-	defer resp_x64.Body.Close()
 	var body []byte
-
-	if resp.StatusCode == 200 {
+	if is_x86 != false {
+		defer resp.Body.Close()
 		body, _ = ioutil.ReadAll(resp.Body)
-	} else if resp_x64.StatusCode == 200 {
+	}
+	if is_x64 != false {
+		defer resp_x64.Body.Close()
 		body, _ = ioutil.ReadAll(resp_x64.Body)
 	}
 
-	defer resp.Body.Close()
 	var buf []byte
 	if bytes.Index(body, []byte("EICAR-STANDARD-ANTIVIRUS-TEST-FILE")) == -1 {
 		buf = decrypt_beacon(body)
 	} else {
 		fmt.Println("trial version")
 	}
-	bodyMap := make(map[string]string)
 	for _, value := range SUPPORTED_VERSIONS {
 		if value == 3 {
 			offset := bytes.Index(buf, []byte("\x69\x68\x69\x68\x69\x6b")) //3的兼容
@@ -140,25 +202,29 @@ func beaconinit(host string, uri_x86 string, uri_x64 string, filename string) {
 	if filename == "NULL" {
 		fmt.Println(bodyText)
 	} else {
-		var f *os.File
-		var err1 error
-		if checkFileIsExist(filename) { //如果文件存在
-			f, err1 = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0666) //打开文件
-			if err1 != nil {
-				panic(err1)
-			}
-		} else {
-			f, err1 = os.Create(filename) //创建文件
-			if err1 != nil {
-				panic(err1)
-			}
-		}
-		defer f.Close()
 		fmt.Println(host)
-		_, err1 = f.WriteString(bodyText)
+		JsonFileWrite(filename, bodyText)
+	}
+}
+
+func JsonFileWrite(filename string, bodyText string) {
+	var f *os.File
+	var err1 error
+	if checkFileIsExist(filename) { //如果文件存在
+		f, err1 = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0666) //打开文件
 		if err1 != nil {
 			panic(err1)
 		}
+	} else {
+		f, err1 = os.Create(filename) //创建文件
+		if err1 != nil {
+			panic(err1)
+		}
+	}
+	defer f.Close()
+	_, err1 = f.WriteString(bodyText)
+	if err1 != nil {
+		panic(err1)
 	}
 }
 
