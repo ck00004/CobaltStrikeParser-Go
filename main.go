@@ -108,6 +108,7 @@ func beaconinit(host string, filename string) {
 	var err error
 	var is_x86 bool = true
 	var is_x64 bool = true
+	var buf []byte
 	var bodyMap map[string]string = make(map[string]string)
 	defer func() {
 		err := recover()
@@ -178,16 +179,29 @@ func beaconinit(host string, filename string) {
 		body, _ = ioutil.ReadAll(resp_x64.Body)
 	}
 	if is_x64 == false && is_x86 == false {
+		fmt.Println(host + " is not checksum8")
 		return
 	}
-
-	var buf []byte
 	if bytes.Index(body, []byte("EICAR-STANDARD-ANTIVIRUS-TEST-FILE")) == -1 {
 		buf = decrypt_beacon(body)
 	} else {
 		fmt.Println("trial version")
-		return
+		os.Exit(0)
 	}
+
+	bodyMap = beacon_config(buf)
+
+	bodyMap["URL"] = host
+	var bodyText string = MapToJson(bodyMap)
+	if filename == "" {
+		fmt.Println(bodyText)
+	} else {
+		fmt.Println(host)
+		JsonFileWrite(filename, bodyText)
+	}
+}
+
+func beacon_config(buf []byte) map[string]string {
 	for _, value := range SUPPORTED_VERSIONS {
 		if value == 3 {
 			var offset int
@@ -199,7 +213,7 @@ func beaconinit(host string, filename string) {
 				if offset1 != -1 {
 					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x69\x6a"))
 					if offset2 != -1 {
-						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						return BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
 				}
 			}
@@ -213,20 +227,13 @@ func beaconinit(host string, filename string) {
 				if offset1 != -1 {
 					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
 					if offset2 != -1 {
-						bodyMap = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						return BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
 					}
 				}
 			}
 		}
 	}
-	bodyMap["URL"] = host
-	var bodyText string = MapToJson(bodyMap)
-	if filename == "" {
-		fmt.Println(bodyText)
-	} else {
-		fmt.Println(host)
-		JsonFileWrite(filename, bodyText)
-	}
+	return map[string]string{"error": "beacon config error"}
 }
 
 func JsonFileWrite(filename string, bodyText string) {
@@ -589,7 +596,7 @@ func BeaconSettings(full_config_data []byte) map[string]string {
 	BeaconConfig["DNS_strategy_fail_seconds"] = pretty_repr(full_config_data, packedSettinginit(70, 2, 0))
 	BeaconConfig["Retry_Max_Attempts"] = pretty_repr(full_config_data, packedSettinginit(71, 2, 0))
 	BeaconConfig["Retry_Increase_Attempts"] = pretty_repr(full_config_data, packedSettinginit(72, 2, 0))
-	BeaconConfig["Retry_Increase_Attempts"] = pretty_repr(full_config_data, packedSettinginit(73, 2, 0))
+	BeaconConfig["Retry_Duration"] = pretty_repr(full_config_data, packedSettinginit(73, 2, 0))
 	return BeaconConfig
 }
 
