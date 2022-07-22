@@ -14,7 +14,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/textproto"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 // A Dir implements FileSystem using the native file system restricted to a

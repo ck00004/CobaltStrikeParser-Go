@@ -18,8 +18,6 @@ import (
 	"math/rand"
 	"net"
 	"net/textproto"
-	"net/url"
-	urlpkg "net/url"
 	"os"
 	"path"
 	"runtime"
@@ -29,6 +27,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
+	urlpkg "github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"golang.org/x/net/http/httpguts"
 )

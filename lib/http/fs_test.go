@@ -14,7 +14,6 @@ import (
 	"mime"
 	"mime/multipart"
 	"net"
-	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -25,6 +24,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	. "github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 

@@ -17,12 +17,13 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/url"
 	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal/ascii"
 )
@@ -475,6 +476,14 @@ func Get(url string) (resp *Response, err error) {
 // and Client.Do.
 func (c *Client) Get(url string) (resp *Response, err error) {
 	req, err := NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return c.Do(req)
+}
+
+func (c *Client) Get1(url string, ismodes int) (resp *Response, err error) {
+	req, err := NewRequest1("GET", url, nil, ismodes)
 	if err != nil {
 		return nil, err
 	}

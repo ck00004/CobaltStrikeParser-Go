@@ -14,9 +14,10 @@ import (
 	"fmt"
 	"io"
 	"net/textproto"
-	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"golang.org/x/net/http/httpguts"
 )

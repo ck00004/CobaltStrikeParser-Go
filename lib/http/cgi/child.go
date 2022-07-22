@@ -14,10 +14,11 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 )

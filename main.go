@@ -107,8 +107,14 @@ func beaconinit(host string, filename string) {
 	var err_x64 error
 	var resp *http.Response
 	var err error
+	var stager *http.Response
+	var stager_err error
+	var stager64 *http.Response
+	var stager_err_x64 error
 	var is_x86 bool = true
 	var is_x64 bool = true
+	var is_stager_x86 bool = true
+	var is_stager_x64 bool = true
 	var buf []byte
 	var bodyMap map[string]string = make(map[string]string)
 	defer func() {
@@ -134,8 +140,12 @@ func beaconinit(host string, filename string) {
 	}
 	var host_x86 string = host + "/" + MSFURI()
 	var host_x64 string = host + "/" + MSFURI_X64()
+	var stager_x86 string = host + "/" + "stager"
+	var stager_x64 string = host + "/" + "stager64"
 	resp, err = client.Get(host_x86)
 	resp_x64, err_x64 = client.Get(host_x64)
+	stager, stager_err = client.Get1(stager_x86, 1)
+	stager64, stager_err_x64 = client.Get1(stager_x64, 1)
 
 	if err != nil || resp.StatusCode != 200 {
 		is_x86 = false
@@ -169,7 +179,38 @@ func beaconinit(host string, filename string) {
 			JsonFileWrite(filename, bodyerror)
 		}
 	}
-
+	if stager_err != nil || stager.StatusCode != 200 {
+		is_stager_x64 = false
+		if filename == "" {
+			fmt.Println("error:", stager_err, "beacon stager x64 not found")
+		} else {
+			fmt.Println("error", stager_err, "beacon stager x64 not found")
+			bodyMap["URL"] = host
+			if stager_err != nil {
+				bodyMap["error"] = stager_err.Error() + "beacon stager x64 not found"
+			} else {
+				bodyMap["error"] = "beacon stager x64 not found"
+			}
+			var bodyerror string = MapToJson(bodyMap)
+			JsonFileWrite(filename, bodyerror)
+		}
+	}
+	if stager_err_x64 != nil || stager64.StatusCode != 200 {
+		is_stager_x64 = false
+		if filename == "" {
+			fmt.Println("error:", stager_err_x64, "beacon stager x64 not found")
+		} else {
+			fmt.Println("error", stager_err_x64, "beacon stager x64 not found")
+			bodyMap["URL"] = host
+			if stager_err_x64 != nil {
+				bodyMap["error"] = stager_err_x64.Error() + "beacon stager x64 not found"
+			} else {
+				bodyMap["error"] = "beacon stager x64 not found"
+			}
+			var bodyerror string = MapToJson(bodyMap)
+			JsonFileWrite(filename, bodyerror)
+		}
+	}
 	var body []byte
 	if is_x86 != false {
 		defer resp.Body.Close()
@@ -179,8 +220,16 @@ func beaconinit(host string, filename string) {
 		defer resp_x64.Body.Close()
 		body, _ = ioutil.ReadAll(resp_x64.Body)
 	}
-	if is_x64 == false && is_x86 == false {
-		fmt.Println(host + " is not checksum8")
+	if is_stager_x86 != false {
+		defer stager.Body.Close()
+		body, _ = ioutil.ReadAll(stager.Body)
+	}
+	if is_stager_x64 != false {
+		defer stager64.Body.Close()
+		body, _ = ioutil.ReadAll(stager64.Body)
+	}
+	if is_x64 == false && is_x86 == false && is_stager_x86 == false && is_stager_x64 == false {
+		fmt.Println(host + " is not checksum8 and stager")
 		return
 	}
 	if bytes.Index(body, []byte("EICAR-STANDARD-ANTIVIRUS-TEST-FILE")) == -1 {

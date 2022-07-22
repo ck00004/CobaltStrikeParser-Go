@@ -14,12 +14,13 @@ import (
 	"io"
 	"math"
 	"mime/multipart"
-	"net/url"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	. "github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 

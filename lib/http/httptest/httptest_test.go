@@ -7,10 +7,11 @@ package httptest
 import (
 	"crypto/tls"
 	"io"
-	"net/url"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 )

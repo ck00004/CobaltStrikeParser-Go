@@ -10,13 +10,14 @@ import (
 	"bytes"
 	"internal/testenv"
 	"io/fs"
-	"net/url"
 	"os"
 	"os/exec"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 func TestForeachHeaderElement(t *testing.T) {

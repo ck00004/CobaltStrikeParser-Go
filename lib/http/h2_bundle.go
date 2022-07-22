@@ -37,7 +37,7 @@ import (
 	"net"
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/httptrace"
 	"net/textproto"
-	"net/url"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 	"os"
 	"reflect"
 	"runtime"

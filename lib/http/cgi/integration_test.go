@@ -14,11 +14,12 @@ import (
 	"fmt"
 	"internal/testenv"
 	"io"
-	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/httptest"

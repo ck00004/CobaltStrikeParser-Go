@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"strings"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 )

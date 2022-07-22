@@ -7,7 +7,8 @@ package http
 import (
 	"mime/multipart"
 	"net/textproto"
-	"net/url"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 func cloneURLValues(v url.Values) url.Values {

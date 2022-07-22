@@ -26,7 +26,6 @@ import (
 	mrand "math/rand"
 	"net"
 	"net/textproto"
-	"net/url"
 	"os"
 	"reflect"
 	"runtime"
@@ -37,6 +36,8 @@ import (
 	"testing"
 	"testing/iotest"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/nettrace"
 

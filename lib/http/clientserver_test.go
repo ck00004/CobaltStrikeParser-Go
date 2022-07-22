@@ -17,7 +17,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"net/url"
 	"os"
 	"reflect"
 	"runtime"
@@ -27,6 +26,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/httputil"
 

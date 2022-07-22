@@ -13,10 +13,11 @@ import (
 	"log"
 	"net"
 	"net/textproto"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal/ascii"
 

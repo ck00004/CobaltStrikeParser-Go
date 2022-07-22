@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/url"
 	"strings"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/httputil"
 

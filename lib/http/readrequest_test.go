@@ -9,10 +9,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net/url"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 type reqTest struct {

@@ -5,9 +5,10 @@
 package http
 
 import (
-	"net/url"
 	"os"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 // TODO(mattn):

@@ -9,11 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/url"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal/ascii"
 

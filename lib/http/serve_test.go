@@ -21,7 +21,6 @@ import (
 	"log"
 	"math/rand"
 	"net"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -36,6 +35,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal"
 

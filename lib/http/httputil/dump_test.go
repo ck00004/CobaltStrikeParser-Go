@@ -11,12 +11,13 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"net/url"
 	"runtime"
 	"runtime/pprof"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 )

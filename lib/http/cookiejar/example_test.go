@@ -7,7 +7,8 @@ package cookiejar_test
 import (
 	"fmt"
 	"log"
-	"net/url"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/cookiejar"

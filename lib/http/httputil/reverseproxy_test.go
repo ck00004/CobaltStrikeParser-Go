@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/url"
 	"os"
 	"reflect"
 	"sort"
@@ -23,6 +22,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal/ascii"
 

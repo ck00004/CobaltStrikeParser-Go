@@ -11,11 +11,12 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/url"
 	"sort"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 var (

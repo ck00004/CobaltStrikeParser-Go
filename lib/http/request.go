@@ -19,11 +19,12 @@ import (
 	"mime/multipart"
 	"net"
 	"net/textproto"
-	"net/url"
-	urlpkg "net/url"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
+	urlpkg "github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/httptrace"
 
@@ -832,6 +833,10 @@ func NewRequest(method, url string, body io.Reader) (*Request, error) {
 	return NewRequestWithContext(context.Background(), method, url, body)
 }
 
+func NewRequest1(method, url string, body io.Reader, ismodes int) (*Request, error) {
+	return NewRequestWithContext1(context.Background(), method, url, body, ismodes)
+}
+
 // NewRequestWithContext returns a new Request given a method, URL, and
 // optional body.
 //
@@ -855,6 +860,7 @@ func NewRequest(method, url string, body io.Reader) (*Request, error) {
 // redirects can replay the body), and Body is set to NoBody if the
 // ContentLength is 0.
 func NewRequestWithContext(ctx context.Context, method, url string, body io.Reader) (*Request, error) {
+
 	if method == "" {
 		// We document that "" means "GET" for Request.Method, and people have
 		// relied on that from NewRequest, so keep that working.
@@ -868,6 +874,93 @@ func NewRequestWithContext(ctx context.Context, method, url string, body io.Read
 		return nil, errors.New("net/http: nil Context")
 	}
 	u, err := urlpkg.Parse(url)
+	if err != nil {
+		return nil, err
+	}
+	rc, ok := body.(io.ReadCloser)
+	if !ok && body != nil {
+		rc = io.NopCloser(body)
+	}
+	// The host's colon:port should be normalized. See Issue 14836.
+	u.Host = removeEmptyPort(u.Host)
+	req := &Request{
+		ctx:        ctx,
+		Method:     method,
+		URL:        u,
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		Header:     make(Header),
+		Body:       rc,
+		Host:       u.Host,
+	}
+	if body != nil {
+		switch v := body.(type) {
+		case *bytes.Buffer:
+			req.ContentLength = int64(v.Len())
+			buf := v.Bytes()
+			req.GetBody = func() (io.ReadCloser, error) {
+				r := bytes.NewReader(buf)
+				return io.NopCloser(r), nil
+			}
+		case *bytes.Reader:
+			req.ContentLength = int64(v.Len())
+			snapshot := *v
+			req.GetBody = func() (io.ReadCloser, error) {
+				r := snapshot
+				return io.NopCloser(&r), nil
+			}
+		case *strings.Reader:
+			req.ContentLength = int64(v.Len())
+			snapshot := *v
+			req.GetBody = func() (io.ReadCloser, error) {
+				r := snapshot
+				return io.NopCloser(&r), nil
+			}
+		default:
+			// This is where we'd set it to -1 (at least
+			// if body != NoBody) to mean unknown, but
+			// that broke people during the Go 1.8 testing
+			// period. People depend on it being 0 I
+			// guess. Maybe retry later. See Issue 18117.
+		}
+		// For client requests, Request.ContentLength of 0
+		// means either actually 0, or unknown. The only way
+		// to explicitly say that the ContentLength is zero is
+		// to set the Body to nil. But turns out too much code
+		// depends on NewRequest returning a non-nil Body,
+		// so we use a well-known ReadCloser variable instead
+		// and have the http package also treat that sentinel
+		// variable to mean explicitly zero.
+		if req.GetBody != nil && req.ContentLength == 0 {
+			req.Body = NoBody
+			req.GetBody = func() (io.ReadCloser, error) { return NoBody, nil }
+		}
+	}
+
+	return req, nil
+}
+
+func NewRequestWithContext1(ctx context.Context, method, url string, body io.Reader, ismodes int) (*Request, error) {
+	var u *urlpkg.URL
+	var err error
+	if method == "" {
+		// We document that "" means "GET" for Request.Method, and people have
+		// relied on that from NewRequest, so keep that working.
+		// We still enforce validMethod for non-empty methods.
+		method = "GET"
+	}
+	if !validMethod(method) {
+		return nil, fmt.Errorf("net/http: invalid method %q", method)
+	}
+	if ctx == nil {
+		return nil, errors.New("net/http: nil Context")
+	}
+	if ismodes == 0 {
+		u, err = urlpkg.Parse(url)
+	} else if ismodes == 1 {
+		u, err = urlpkg.Parse1(url)
+	}
 	if err != nil {
 		return nil, err
 	}

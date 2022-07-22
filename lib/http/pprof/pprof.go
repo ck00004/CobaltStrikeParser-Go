@@ -64,7 +64,6 @@ import (
 	"html"
 	"io"
 	"log"
-	"net/url"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -73,6 +72,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/profile"
 

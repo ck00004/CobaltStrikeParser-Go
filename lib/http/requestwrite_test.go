@@ -11,11 +11,12 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/url"
 	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 )
 
 type reqWriteTest struct {

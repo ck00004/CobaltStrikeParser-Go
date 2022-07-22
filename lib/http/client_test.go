@@ -16,7 +16,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -24,6 +23,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
 
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/cookiejar"
 
