@@ -12,11 +12,12 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/http"
 )
 
 var TYPE_SHORT = 1
