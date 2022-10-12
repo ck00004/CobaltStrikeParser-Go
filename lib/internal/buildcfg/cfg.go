@@ -8,7 +8,7 @@
 //
 // Note that it does NOT provide access to the build configuration used to
 // build the currently-running binary. For that, use runtime.GOOS etc
-// as well as internal/goexperiment.
+// as well as github.com/ck00004/CobaltStrikeParser-Go/lib/internal/goexperiment.
 package buildcfg
 
 import (

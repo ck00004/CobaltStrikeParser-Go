@@ -8,9 +8,10 @@
 package poll_test
 
 import (
-	. "internal/poll"
 	"io"
 	"testing"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 )
 
 var eofErrorTests = []struct {

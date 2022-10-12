@@ -5,12 +5,13 @@
 package poll_test
 
 import (
-	. "internal/poll"
 	"math/rand"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 )
 
 func TestMutexLock(t *testing.T) {

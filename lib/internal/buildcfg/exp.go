@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"strings"
 
-	"internal/goexperiment"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/goexperiment"
 )
 
 // Experiment contains the toolchain experiments enabled for the
@@ -44,7 +44,7 @@ var FramePointerEnabled = GOARCH == "amd64" || GOARCH == "arm64"
 // configuration tuple and returns the enabled and baseline experiment
 // flag sets.
 //
-// TODO(mdempsky): Move to internal/goexperiment.
+// TODO(mdempsky): Move to github.com/ck00004/CobaltStrikeParser-Go/lib/internal/goexperiment.
 func ParseGOEXPERIMENT(goos, goarch, goexp string) (flags, baseline goexperiment.Flags, err error) {
 	regabiSupported := goarch == "amd64" && (goos == "android" || goos == "linux" || goos == "darwin" || goos == "windows")
 

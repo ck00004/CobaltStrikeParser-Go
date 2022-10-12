@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 // Export guts for testing on linux.
-// Since testing imports os and os imports internal/poll,
-// the internal/poll tests can not be in package poll.
+// Since testing imports os and os imports github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll,
+// the github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll tests can not be in package poll.
 
 package poll
 

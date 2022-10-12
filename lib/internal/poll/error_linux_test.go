@@ -6,9 +6,10 @@ package poll_test
 
 import (
 	"errors"
-	"internal/poll"
 	"os"
 	"syscall"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 )
 
 func badStateFile() (*os.File, error) {

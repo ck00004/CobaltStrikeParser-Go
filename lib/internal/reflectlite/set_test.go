@@ -8,9 +8,10 @@ import (
 	"bytes"
 	"go/ast"
 	"go/token"
-	. "internal/reflectlite"
 	"io"
 	"testing"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/reflectlite"
 )
 
 func TestImplicitSetConversion(t *testing.T) {

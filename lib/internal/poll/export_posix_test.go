@@ -6,8 +6,8 @@
 // +build aix darwin dragonfly freebsd linux netbsd openbsd solaris windows
 
 // Export guts for testing on posix.
-// Since testing imports os and os imports internal/poll,
-// the internal/poll tests can not be in package poll.
+// Since testing imports os and os imports github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll,
+// the github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll tests can not be in package poll.
 
 package poll
 

@@ -8,10 +8,11 @@
 package cpu_test
 
 import (
-	. "internal/cpu"
 	"os"
 	"runtime"
 	"testing"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu"
 )
 
 func TestX86ifAVX2hasAVX(t *testing.T) {

@@ -5,13 +5,14 @@
 package cpu_test
 
 import (
-	. "internal/cpu"
 	"internal/testenv"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 	"testing"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu"
 )
 
 func TestMinimalFeatures(t *testing.T) {

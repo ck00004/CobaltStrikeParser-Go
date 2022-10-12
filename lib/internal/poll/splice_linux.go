@@ -5,12 +5,13 @@
 package poll
 
 import (
-	"internal/syscall/unix"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"unsafe"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/syscall/unix"
 )
 
 const (

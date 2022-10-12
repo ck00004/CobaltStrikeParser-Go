@@ -5,9 +5,10 @@
 package poll
 
 import (
-	"internal/syscall/unix"
 	"sync/atomic"
 	"syscall"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/syscall/unix"
 )
 
 var copyFileRangeSupported int32 = -1 // accessed atomically
@@ -144,7 +145,7 @@ func copyFileRange(dst, src *FD, max int) (written int64, err error) {
 	// values for off_in and off_out. For the system call, this means
 	// "use and update the file offsets". That is why we must acquire
 	// locks for both file descriptors (and why this whole machinery is
-	// in the internal/poll package to begin with).
+	// in the github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll package to begin with).
 	if err := dst.writeLock(); err != nil {
 		return 0, err
 	}

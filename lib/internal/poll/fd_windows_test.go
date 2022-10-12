@@ -6,7 +6,7 @@ package poll_test
 
 import (
 	"fmt"
-	"internal/poll"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 	"os"
 	"sync"
 	"syscall"

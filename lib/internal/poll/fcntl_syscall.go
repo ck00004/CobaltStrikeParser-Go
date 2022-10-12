@@ -8,8 +8,9 @@
 package poll
 
 import (
-	"internal/syscall/unix"
 	"syscall"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/syscall/unix"
 )
 
 func fcntl(fd int, cmd int, arg int) (int, error) {

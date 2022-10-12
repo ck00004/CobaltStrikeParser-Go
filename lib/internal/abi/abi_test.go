@@ -5,12 +5,13 @@
 package abi_test
 
 import (
-	"internal/abi"
 	"internal/testenv"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/abi"
 )
 
 func TestFuncPC(t *testing.T) {

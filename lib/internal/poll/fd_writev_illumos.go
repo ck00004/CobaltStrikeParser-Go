@@ -8,7 +8,7 @@
 package poll
 
 import (
-	"internal/syscall/unix"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/syscall/unix"
 	"syscall"
 )
 

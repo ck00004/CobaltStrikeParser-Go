@@ -5,9 +5,10 @@
 package poll_test
 
 import (
-	"internal/poll"
 	"reflect"
 	"testing"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 )
 
 func TestConsume(t *testing.T) {

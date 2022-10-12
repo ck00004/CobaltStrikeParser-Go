@@ -9,9 +9,10 @@
 package reflectlite_test
 
 import (
-	. "internal/reflectlite"
 	"reflect"
 	"strconv"
+
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/reflectlite"
 )
 
 // valueToString returns a textual representation of the reflection value val.

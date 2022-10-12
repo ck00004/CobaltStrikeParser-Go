@@ -4,7 +4,7 @@
 
 package bytealg
 
-import "internal/cpu"
+import "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu"
 
 const MaxBruteForce = 64
 
@@ -13,7 +13,7 @@ func init() {
 	// The runtime sets HasVX when processing auxv records, and that happens
 	// to happen *before* running the init functions of packages that
 	// the runtime depends on.
-	// TODO: it would really be nicer for internal/cpu to figure out this
+	// TODO: it would really be nicer for github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu to figure out this
 	// flag by itself. Then we wouldn't need to depend on quirks of
 	// early startup initialization order.
 	if cpu.S390X.HasVX {

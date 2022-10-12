@@ -6,7 +6,7 @@ package cpu_test
 
 import (
 	"errors"
-	. "internal/cpu"
+	. "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu"
 	"os"
 	"regexp"
 	"testing"

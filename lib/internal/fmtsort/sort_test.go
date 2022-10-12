@@ -6,12 +6,13 @@ package fmtsort_test
 
 import (
 	"fmt"
-	"internal/fmtsort"
 	"math"
 	"reflect"
 	"strings"
 	"testing"
 	"unsafe"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/fmtsort"
 )
 
 var compareTests = [][]reflect.Value{

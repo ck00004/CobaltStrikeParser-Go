@@ -5,12 +5,14 @@
 package poll_test
 
 import (
-	"internal/poll"
-	"internal/syscall/unix"
 	"runtime"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/syscall/unix"
+
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/poll"
 )
 
 // checkPipes returns true if all pipes are closed properly, false otherwise.

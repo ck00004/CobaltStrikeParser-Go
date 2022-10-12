@@ -4,7 +4,7 @@
 
 package x
 
-import "internal/abi"
+import "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/abi"
 
 func Fn0() // defined in assembly
 

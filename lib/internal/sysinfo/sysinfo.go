@@ -7,8 +7,9 @@
 package sysinfo
 
 import (
-	internalcpu "internal/cpu"
 	"sync"
+
+	internalcpu "github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu"
 )
 
 type cpuInfo struct {
@@ -20,7 +21,7 @@ var CPU cpuInfo
 
 func (cpu *cpuInfo) Name() string {
 	cpu.once.Do(func() {
-		// Try to get the information from internal/cpu.
+		// Try to get the information from github.com/ck00004/CobaltStrikeParser-Go/lib/internal/cpu.
 		if name := internalcpu.Name(); name != "" {
 			cpu.name = name
 			return

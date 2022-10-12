@@ -11,7 +11,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"internal/goexperiment"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/internal/goexperiment"
 	"log"
 	"os"
 	"reflect"
