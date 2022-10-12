@@ -23,8 +23,10 @@ CobaltStrikeParser.exe -f c2urlflie -o c2configflie.txt -t 10 -br 5
 不要调用 beaconscan.BeaconInitThread 这是多线程模式启动
 
 beaconscan.Beaconinit(url, fliename, timeout)
+
 当flienmae 为""时返回数据返回json格式的数据和错误信息
-党fliename 不为""时会将json数据写入flienmae中
+
+当fliename 不为""时会将json数据写入flienmae中
 
 
 ```
