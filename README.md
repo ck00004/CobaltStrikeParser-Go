@@ -39,9 +39,9 @@ if err != nil {
     if beaconinfo.IsCobaltStrike {
         fmt.Println(beaconscan.StructToJson(beaconinfo))
     } else if beaconinfo.Confidence > 0 {
-        fmt.Println(*u + beaconinfo.ConfidenceInfo)
+        fmt.Println(url + beaconinfo.ConfidenceInfo)
     } else {
-        fmt.Println(*u + "Not CobaltStrike")
+        fmt.Println(url + "Not CobaltStrike")
     }
 }
 ```
