@@ -132,13 +132,14 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 	var bodyMap BodyMap
 	bodyMap.Confidence = 0       //置信度
 	bodyMap.TrialVersion = false //是否为试用版
+	bodyMap.IsCobaltStrike = false
 	defer func() {
 		err := recover()
 		if err != nil {
 			if filename == "" {
-				fmt.Println("error:", host+" beacon config error")
+				bodyMap.URL = host
+				bodyMap.Error = "beacon config error"
 			} else {
-				fmt.Println("error:", host+" beacon config error")
 				bodyMap.URL = host
 				bodyMap.Error = "beacon config error"
 				var bodyerror string = StructToJson(bodyMap)
@@ -176,9 +177,9 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 			} else {
 				bodyMap.Error = bodyMap.Error + "Checksum8 stager x86 not found"
 			}
-			fmt.Println("error:", "Checksum8 stager x86 not found", err)
+			//fmt.Println("error:", "Checksum8 stager x86 not found", err)
 		} else {
-			fmt.Println("error:", "Checksum8 stager x86 not found", err)
+			//fmt.Println("error:", "Checksum8 stager x86 not found", err)
 			bodyMap.URL = host
 			if err != nil {
 				bodyMap.Error = bodyMap.Error + "Checksum8 stager x86 not found" + err.Error()
@@ -195,9 +196,9 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 			} else {
 				bodyMap.Error = bodyMap.Error + "Checksum8 stager x64 not found"
 			}
-			fmt.Println("error:", "Checksum8 stager x64 not found", err_x64)
+			//fmt.Println("error:", "Checksum8 stager x64 not found", err_x64)
 		} else {
-			fmt.Println("error", "Checksum8 stager x64 not found", err_x64)
+			//fmt.Println("error", "Checksum8 stager x64 not found", err_x64)
 			bodyMap.URL = host
 			if err_x64 != nil {
 				bodyMap.Error = bodyMap.Error + "Checksum8 stager x64 not found" + err_x64.Error()
@@ -214,9 +215,9 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 			} else {
 				bodyMap.Error = bodyMap.Error + "unauthorized stager x86 not found"
 			}
-			fmt.Println("error:", "unauthorized stager x86 not found", stager_err)
+			//fmt.Println("error:", "unauthorized stager x86 not found", stager_err)
 		} else {
-			fmt.Println("error:", "unauthorized stager x86 not found", stager_err)
+			//fmt.Println("error:", "unauthorized stager x86 not found", stager_err)
 			bodyMap.URL = host
 			if stager_err != nil {
 				bodyMap.Error = bodyMap.Error + "unauthorized stager x86 not found" + stager_err.Error()
@@ -233,9 +234,9 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 			} else {
 				bodyMap.Error = bodyMap.Error + "unauthorized stager x64 not found"
 			}
-			fmt.Println("error:", bodyMap.Error+"unauthorized stager x64 not found", stager_err_x64)
+			//fmt.Println("error:", bodyMap.Error+"unauthorized stager x64 not found", stager_err_x64)
 		} else {
-			fmt.Println("error", bodyMap.Error+"unauthorized stager x64 not found", stager_err_x64)
+			//fmt.Println("error", bodyMap.Error+"unauthorized stager x64 not found", stager_err_x64)
 			bodyMap.URL = host
 			if stager_err_x64 != nil {
 				bodyMap.Error = bodyMap.Error + "unauthorized stager x64 not found" + stager_err_x64.Error()
@@ -274,8 +275,7 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 		bodys = append(bodys, body_stager_x64)
 	}
 	if is_x64 == false && is_x86 == false && is_stager_x86 == false && is_stager_x64 == false {
-		fmt.Println(host + " is not checksum8 and unauthorized stager")
-		bodyMap.IsCobaltStrike = false
+		//fmt.Println(host + " is not checksum8 and unauthorized stager")
 		var bodyText string = StructToJson(bodyMap)
 		if filename == "" {
 			return bodyMap, nil
@@ -291,7 +291,7 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 			buf = decrypt_beacon(body)
 		} else {
 			bodyMap.TrialVersion = true
-			fmt.Println("trial version")
+			//fmt.Println("trial version")
 			var bodyText string = StructToJson(bodyMap)
 			if filename == "" {
 				return bodyMap, nil
@@ -578,8 +578,9 @@ func packedSettinginit(pos, datatype, length int, options ...packedSetting_init_
 		op(p)
 	}
 	if datatype == TYPE_STR && length == 0 { //这里没处理TYPE_STR
-		fmt.Println("if datatype is TYPE_STR then length must not be 0")
-		os.Exit(1)
+		//fmt.Println("if datatype is TYPE_STR then length must not be 0")
+		//os.Exit(1)
+		return nil
 		//返回一个错误
 	}
 	if datatype == TYPE_SHORT {
