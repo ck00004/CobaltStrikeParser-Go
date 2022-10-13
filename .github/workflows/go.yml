@@ -5,7 +5,6 @@ on:
     tags:
     - v*
 
-permissions: read-all|write-all
 jobs:
   release:
     name: Release on GitHub
