@@ -23,9 +23,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
-
 	"github.com/ck00004/CobaltStrikeParser-Go/lib/http/internal/ascii"
+	"github.com/ck00004/CobaltStrikeParser-Go/lib/url"
+	"github.com/ck00004/uarand"
 )
 
 // A Client is an HTTP client. Its zero value (DefaultClient) is a
@@ -479,6 +479,7 @@ func (c *Client) Get(url string) (resp *Response, err error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", uarand.GetRandom())
 	return c.Do(req)
 }
 
@@ -487,6 +488,7 @@ func (c *Client) Get1(url string, ismodes int) (resp *Response, err error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", uarand.GetRandom())
 	return c.Do(req)
 }
 
