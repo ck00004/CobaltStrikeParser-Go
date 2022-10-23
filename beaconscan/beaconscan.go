@@ -158,7 +158,6 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 	if host[len(host)-1:] == "/" {
 		host = host[:len(host)-1]
 	}
-
 	var host_x86 string = host + "/" + Checksum8()
 	var host_x64 string = host + "/" + Checksum8_X64()
 	var stager_x86 string = host + "/" + "stager"
@@ -248,31 +247,43 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 	var bodys [][]byte
 	if is_x86 != false {
 		defer resp.Body.Close()
-		bodyMap.Confidence = 30
-		bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " Checksum8 stager x86 is "
 		body_x86, _ := ioutil.ReadAll(resp.Body)
-		bodys = append(bodys, body_x86)
+		//fmt.Println("body_x86 len", len(body_x86))
+		if len(body_x86) > 200000 {
+			bodyMap.Confidence = 30
+			bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " Checksum8 stager x86 is "
+			bodys = append(bodys, body_x86)
+		}
 	}
 	if is_x64 != false {
 		defer resp_x64.Body.Close()
-		bodyMap.Confidence = 30
-		bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " Checksum8 stager x64 is "
 		body_x64, _ := ioutil.ReadAll(resp_x64.Body)
-		bodys = append(bodys, body_x64)
+		//fmt.Println("body_x64 len", len(body_x64))
+		if len(body_x64) > 200000 {
+			bodyMap.Confidence = 30
+			bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " Checksum8 stager x64 is "
+			bodys = append(bodys, body_x64)
+		}
 	}
 	if is_stager_x86 != false {
 		defer stager.Body.Close()
-		bodyMap.Confidence = 80
-		bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " unauthorized stager x84 is "
 		body_stager_x86, _ := ioutil.ReadAll(stager.Body)
-		bodys = append(bodys, body_stager_x86)
+		//fmt.Println("body_stager_x86 len", len(body_stager_x86))
+		if len(body_stager_x86) > 200000 {
+			bodyMap.Confidence = 80
+			bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " unauthorized stager x84 is "
+			bodys = append(bodys, body_stager_x86)
+		}
 	}
 	if is_stager_x64 != false {
 		defer stager64.Body.Close()
-		bodyMap.Confidence = 80
-		bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " unauthorized stager x64 is "
 		body_stager_x64, _ := ioutil.ReadAll(stager64.Body)
-		bodys = append(bodys, body_stager_x64)
+		//fmt.Println("body_stager_x64 len", len(body_stager_x64))
+		if len(body_stager_x64) > 200000 {
+			bodyMap.Confidence = 80
+			bodyMap.ConfidenceInfo = bodyMap.ConfidenceInfo + " unauthorized stager x64 is "
+			bodys = append(bodys, body_stager_x64)
+		}
 	}
 	if is_x64 == false && is_x86 == false && is_stager_x86 == false && is_stager_x64 == false {
 		//fmt.Println(host + " is not checksum8 and unauthorized stager")
