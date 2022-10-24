@@ -148,12 +148,13 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 		}
 	}()
 	var tr *http.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		DisableKeepAlives: true, // 长连接
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
 	}
 
 	var client *http.Client = &http.Client{
-		Timeout:   time.Duration(t) * time.Second,
 		Transport: tr,
+		Timeout:   time.Duration(t) * time.Second,
 	}
 	if host[len(host)-1:] == "/" {
 		host = host[:len(host)-1]
