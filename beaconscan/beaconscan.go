@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"crypto/md5"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,6 +24,8 @@ var TYPE_STR = 3
 
 var SUPPORTED_VERSIONS = []int{3, 4}
 
+var Savedata_buf []byte
+
 type BeaconConfig struct {
 	BeaconType                   string `json:"beacon_type"`
 	Port                         string `json:"port"`
@@ -29,6 +33,7 @@ type BeaconConfig struct {
 	MaxGetSize                   string `json:"max_get_size"`
 	Jitter                       string `json:"jitter"`
 	MaxDNS                       string `json:"max_dns"`
+	PublicKey_Base64             string `json:"public_key_Base64"`
 	PublicKey_MD5                string `json:"public_key_md5"`
 	C2Server                     string `json:"c2server"`
 	UserAgent                    string `json:"useragent"`
@@ -96,12 +101,12 @@ type BodyMap struct {
 	Beaconconfig   BeaconConfig `json:"beaconconfig"`
 }
 
-func BeaconInitThread(wg *sync.WaitGroup, num *int, mutex *sync.Mutex, ChanUrlList chan string, filename string, t int) {
+func BeaconInitThread(wg *sync.WaitGroup, num *int, mutex *sync.Mutex, ChanUrlList chan string, filename string, t int, IsSave bool) {
 	defer wg.Done()
 	for one := range ChanUrlList {
 		go incrNum(num, mutex)
 		host := one
-		Beaconinit(host, filename, t)
+		Beaconinit(host, filename, t, IsSave)
 	}
 }
 
@@ -115,7 +120,7 @@ func incrNum(num *int, mutex *sync.Mutex) {
 // host: 目标地址
 // filename: 输出文件
 // t: 超时时间
-func Beaconinit(host string, filename string, t int) (BodyMap, error) {
+func Beaconinit(host string, filename string, t int, IsSave bool) (BodyMap, error) {
 	var resp_x64 *http.Response
 	var err_x64 error
 	var resp *http.Response
@@ -320,6 +325,24 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 		if bodyMap.Beaconconfig.C2Server != "" {
 			bodyMap.IsCobaltStrike = true
 			bodyMap.Confidence = 100
+			if IsSave == true {
+				dirint, direrr := CreateDir("./data")
+				if dirint == 2 || dirint == 0 {
+					ipport := strings.Split(host, "//")[1]
+					decrypted_data_filename := "./data/" + ipport + ".bin"
+					decrypted_data_file, fileerr := os.OpenFile(decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+					if fileerr != nil {
+						fmt.Println("file open error:", fileerr)
+					} else {
+						decrypted_data_file.Write(Savedata_buf)
+						defer decrypted_data_file.Close()
+					}
+
+				} else {
+					fmt.Println("create dir error:", direrr)
+				}
+
+			}
 		}
 		var bodyText string = StructToJson(bodyMap)
 		if filename == "" {
@@ -333,6 +356,40 @@ func Beaconinit(host string, filename string, t int) (BodyMap, error) {
 	}
 	var nilbodyMap BodyMap
 	return nilbodyMap, nil
+}
+
+// 创建文件夹
+func CreateDir(path string) (int, error) {
+	_exist, _err := HasDir(path)
+	if _err != nil {
+		//fmt.Printf("获取文件夹异常 -> %v\n", _err)
+		return 1, _err
+	}
+	if _exist {
+		//fmt.Println("文件夹已存在！")
+		return 2, nil
+	} else {
+		err := os.Mkdir(path, os.ModePerm)
+		if err != nil {
+			//fmt.Printf("创建目录异常 -> %v\n", err)
+			return 3, err
+		} else {
+			//fmt.Println("创建成功!")
+			return 0, nil
+		}
+	}
+}
+
+// 判断文件夹是否存在
+func HasDir(path string) (bool, error) {
+	_, _err := os.Stat(path)
+	if _err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(_err) {
+		return false, nil
+	}
+	return false, _err
 }
 
 func Beacon_config(buf []byte) BeaconConfig {
@@ -473,6 +530,7 @@ type packedSetting_init_type struct {
 	boolFalseValue        int
 	isProcInjectTransform bool
 	hashBlob              bool
+	base64Blob            bool
 	enum                  map[byte]string
 	mask                  map[byte]string
 	transform_get         string
@@ -549,6 +607,13 @@ func WritehashBlob(hashBlob bool) packedSetting_init_typeOptions {
 		p.hashBlob = hashBlob
 	}
 }
+
+func Writebase64Blob(base64Blob bool) packedSetting_init_typeOptions {
+	return func(p *packedSetting_init_type) {
+		p.base64Blob = base64Blob
+	}
+}
+
 func Writeenum(enum map[byte]string) packedSetting_init_typeOptions {
 	return func(p *packedSetting_init_type) {
 		p.enum = enum
@@ -570,6 +635,7 @@ func DefaultpackedSetting_init_type(p *packedSetting_init_type) *packedSetting_i
 	p.boolFalseValue = 0
 	p.isProcInjectTransform = false
 	p.hashBlob = false
+	p.base64Blob = false
 	p.enum = make(map[byte]string)
 	p.mask = make(map[byte]string)
 	p.transform_get = ""
@@ -675,6 +741,7 @@ func BeaconSettings(full_config_data []byte) BeaconConfig {
 	beaconconfig.Jitter = pretty_repr(full_config_data, packedSettinginit(5, 1, 0))
 	beaconconfig.MaxDNS = pretty_repr(full_config_data, packedSettinginit(6, 1, 0))
 	//BeaconConfig["PublicKey"] = pretty_repr(full_config_data, packedSettinginit(7, 3, 256, WriteisBlob(true)))
+	beaconconfig.PublicKey_Base64 = pretty_repr(full_config_data, packedSettinginit(7, 3, 256, WriteisBlob(true), Writebase64Blob(true)))
 	beaconconfig.PublicKey_MD5 = pretty_repr(full_config_data, packedSettinginit(7, 3, 256, WriteisBlob(true), WritehashBlob(true)))
 	beaconconfig.C2Server = pretty_repr(full_config_data, packedSettinginit(8, 3, 256))
 	beaconconfig.UserAgent = pretty_repr(full_config_data, packedSettinginit(9, 3, 128))
@@ -916,6 +983,11 @@ func pretty_repr(data []byte, p *packedSetting_init_type) string {
 		var x string = fmt.Sprintf("%x", md5.Sum(bytes.TrimRight(conf_data, "\x00")))
 		return x
 	}
+
+	if p.base64Blob {
+		return base64.StdEncoding.EncodeToString(conf_data)
+	}
+
 	if p.isHeaders {
 		var current_category string
 		var trans map[string]string = map[string]string{
@@ -1022,6 +1094,7 @@ func IsContain(items []int, item int) bool {
 }
 
 func decode_config(data_buf []byte, version int) []byte {
+	Savedata_buf = data_buf
 	var XORBYTES byte
 	if version == 3 {
 		XORBYTES = 0x69

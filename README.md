@@ -11,11 +11,12 @@ go build -o CobaltStrikeParser.exe main.go
 CobaltStrikeParser.exe -u http://127.0.0.1 -o c2configflie.txt -t 10
 CobaltStrikeParser.exe -f c2urlflie -o c2configflie.txt -t 10 -br 5
 
--u   This can be a url (if started with http/s)
--f   This can be a file path (if started with http/s)
--o   out file
--t   timeout
--br  thread,import file valid. default:1
+-u       This can be a url (if started with http/s)
+-f       This can be a file path (if started with http/s)
+-o       out file
+-t       timeout. default:30
+-br      thread,import file valid. default:1
+-issave  save not decrypted data to file ,Saved in the data directory. default:false
 ```
 
 # 使用作为函数调用
@@ -28,11 +29,12 @@ beaconscan.Beaconinit(url, fliename, timeout)
 
 当fliename 不为""时会将json数据写入flienmae中
 
+当 IsSave 为true时，会将未解密的beacon保存到当前目录下data文件夹中
 
 ```
 url := "https://www.google.com"
 timeout : = 5
-beaconinfo, err := beaconscan.Beaconinit(url, "", timeout)
+beaconinfo, err := beaconscan.Beaconinit(url, "", timeout,false)
 if err != nil {
     fmt.Println(err)
 } else {

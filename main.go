@@ -15,8 +15,9 @@ import (
 var u = flag.String("u", "", "This can be a url (if started with http/s)")
 var f = flag.String("f", "", "This can be a file path (if started with http/s)")
 var o = flag.String("o", "", "out file")
-var t = flag.Int("t", 30, "timeout. default:20")
+var t = flag.Int("t", 30, "timeout. default:30")
 var br = flag.Int("br", 1, "thread,import file valid. default:1")
+var IsSave = flag.Bool("issave", false, "save not decrypted data to file ,Saved in the data directory. default:false")
 
 func main() {
 	flag.Parse()
@@ -59,14 +60,14 @@ func main() {
 		}
 		for i := 0; i < *br; i++ {
 			wg.Add(1)
-			go beaconscan.BeaconInitThread(&wg, &num, &mutex, ChanUrlList, *o, *t)
+			go beaconscan.BeaconInitThread(&wg, &num, &mutex, ChanUrlList, *o, *t, *IsSave)
 		}
 
 		close(ChanUrlList)
 		wg.Wait()
 	} else {
 		if *o == "" {
-			beaconinfo, err := beaconscan.Beaconinit(*u, "", *t)
+			beaconinfo, err := beaconscan.Beaconinit(*u, "", *t, *IsSave)
 			if err != nil {
 				fmt.Println(err)
 			} else {
@@ -79,7 +80,7 @@ func main() {
 				}
 			}
 		} else {
-			beaconscan.Beaconinit(*u, *o, *t)
+			beaconscan.Beaconinit(*u, *o, *t, *IsSave)
 		}
 	}
 }
