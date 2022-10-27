@@ -359,6 +359,8 @@ func Beaconinit(host string, filename string, t int, IsSave bool) (BodyMap, erro
 		}
 	}
 	var nilbodyMap BodyMap
+	bodyMap.URL = host
+	JsonFileWrite(filename, StructToJson(bodyMap))
 	return nilbodyMap, nil
 }
 
