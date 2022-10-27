@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ var Savedata_buf []byte
 type BeaconConfig struct {
 	BeaconType                   string `json:"beacon_type"`
 	Port                         string `json:"port"`
+	CobaltStrikeVersion          int    `json:"cobaltstrikeversion"`
 	SleepTime                    string `json:"sleep_time"`
 	MaxGetSize                   string `json:"max_get_size"`
 	Jitter                       string `json:"jitter"`
@@ -98,6 +100,7 @@ type BodyMap struct {
 	Confidence     int          `json:"confidence"`
 	ConfidenceInfo string       `json:"confidence_info"`
 	Error          string       `json:"error"`
+	BeaconFileBin  string       `json:"beaconfile_bin,omitempty"`
 	Beaconconfig   BeaconConfig `json:"beaconconfig"`
 }
 
@@ -329,8 +332,9 @@ func Beaconinit(host string, filename string, t int, IsSave bool) (BodyMap, erro
 				dirint, direrr := CreateDir("./data")
 				if dirint == 2 || dirint == 0 {
 					ipport := strings.Split(host, "//")[1]
-					decrypted_data_filename := "./data/" + ipport + ".bin"
-					decrypted_data_file, fileerr := os.OpenFile(decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+					decrypted_data_filename := ipport + ":" + strconv.Itoa(bodyMap.Beaconconfig.CobaltStrikeVersion) + ":" + fmt.Sprint(time.Now().Unix()) + ".bin"
+					decrypted_data_file, fileerr := os.OpenFile("./data/"+decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+					bodyMap.BeaconFileBin = decrypted_data_filename
 					if fileerr != nil {
 						fmt.Println("file open error:", fileerr)
 					} else {
@@ -405,7 +409,11 @@ func Beacon_config(buf []byte) BeaconConfig {
 				if offset1 != -1 {
 					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x69\x6a"))
 					if offset2 != -1 {
-						return BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						beaconconfig = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						if beaconconfig.C2Server != "" {
+							beaconconfig.CobaltStrikeVersion = 3
+						}
+						return beaconconfig
 					}
 				}
 			}
@@ -419,7 +427,11 @@ func Beacon_config(buf []byte) BeaconConfig {
 				if offset1 != -1 {
 					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
 					if offset2 != -1 {
-						return BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						beaconconfig = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+						if beaconconfig.C2Server != "" {
+							beaconconfig.CobaltStrikeVersion = 4
+						}
+						return beaconconfig
 					}
 				}
 			}
