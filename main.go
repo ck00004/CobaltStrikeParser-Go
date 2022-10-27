@@ -76,7 +76,11 @@ func main() {
 		defer filebuf.Close()
 		BeaconBuf, _ := ioutil.ReadAll(filebuf)
 		got := beaconscan.Beacon_config(BeaconBuf)
-		fmt.Println(got)
+		if *o == "" {
+			fmt.Println(beaconscan.StructToJson(got))
+		} else {
+			beaconscan.JsonFileWrite(*o, beaconscan.StructToJson(got))
+		}
 	} else {
 		if *o == "" {
 			beaconinfo, err := beaconscan.Beaconinit(*u, "", *t, *IsSave)
