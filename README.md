@@ -17,6 +17,7 @@ CobaltStrikeParser.exe -f c2urlflie -o c2configflie.txt -t 10 -br 5
 -t       timeout. default:30
 -br      thread,import file valid. default:1
 -issave  save not decrypted data to file ,Saved in the data directory. default:false
+-beaconfile  beacon config file path
 ```
 
 # 使用作为函数调用
