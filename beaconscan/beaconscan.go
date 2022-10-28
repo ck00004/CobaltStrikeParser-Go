@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -356,7 +357,7 @@ func Write_decrypted_data(bodyMap BodyMap, host string) BodyMap {
 		if len(fileipport) == 2 {
 			ipport = fileipport[1]
 		} else {
-			ipport = host
+			ipport = filepath.Base(host)
 		}
 		decrypted_data_filename := ipport + ":" + strconv.Itoa(bodyMap.Beaconconfig.CobaltStrikeVersion) + ":" + fmt.Sprint(time.Now().Unix()) + ".bin"
 		decrypted_data_file, fileerr := os.OpenFile("./data/"+decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
