@@ -68,6 +68,7 @@ func main() {
 		close(ChanUrlList)
 		wg.Wait()
 	} else if *BeaconFile != "" {
+		var Bodygot beaconscan.BodyMap
 		filebuf, BeaconFileerr := os.OpenFile(*BeaconFile, os.O_RDWR, 0666)
 		if BeaconFileerr != nil {
 			fmt.Println("Open file error!", BeaconFileerr)
@@ -76,10 +77,17 @@ func main() {
 		defer filebuf.Close()
 		BeaconBuf, _ := ioutil.ReadAll(filebuf)
 		got := beaconscan.Beacon_config(BeaconBuf)
+		if got.C2Server != "" {
+			Bodygot.Beaconconfig = got
+			Bodygot.IsCobaltStrike = true
+		}
+		if *IsSave {
+			Bodygot = beaconscan.Write_decrypted_data(Bodygot, *BeaconFile)
+		}
 		if *o == "" {
-			fmt.Println(beaconscan.StructToJson(got))
+			fmt.Println(beaconscan.StructToJson(Bodygot))
 		} else {
-			beaconscan.JsonFileWrite(*o, beaconscan.StructToJson(got))
+			beaconscan.JsonFileWrite(*o, beaconscan.StructToJson(Bodygot))
 		}
 	} else {
 		if *o == "" {

@@ -94,12 +94,12 @@ type BeaconConfig struct {
 }
 
 type BodyMap struct {
-	URL            string       `json:"url"`
-	IsCobaltStrike bool         `json:"is_cobaltstrike"`
-	TrialVersion   bool         `json:"trial_version"`
-	Confidence     int          `json:"confidence"`
-	ConfidenceInfo string       `json:"confidence_info"`
-	Error          string       `json:"error"`
+	URL            string       `json:"url,omitempty"`
+	IsCobaltStrike bool         `json:"is_cobaltstrike,omitempty"`
+	TrialVersion   bool         `json:"trial_version,omitempty"`
+	Confidence     int          `json:"confidence,omitempty"`
+	ConfidenceInfo string       `json:"confidence_info,omitempty"`
+	Error          string       `json:"error,omitempty"`
 	BeaconFileBin  string       `json:"beaconfile_bin,omitempty"`
 	Beaconconfig   BeaconConfig `json:"beaconconfig"`
 }
@@ -329,23 +329,7 @@ func Beaconinit(host string, filename string, t int, IsSave bool) (BodyMap, erro
 			bodyMap.IsCobaltStrike = true
 			bodyMap.Confidence = 100
 			if IsSave == true {
-				dirint, direrr := CreateDir("./data")
-				if dirint == 2 || dirint == 0 {
-					ipport := strings.Split(host, "//")[1]
-					decrypted_data_filename := ipport + ":" + strconv.Itoa(bodyMap.Beaconconfig.CobaltStrikeVersion) + ":" + fmt.Sprint(time.Now().Unix()) + ".bin"
-					decrypted_data_file, fileerr := os.OpenFile("./data/"+decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-					bodyMap.BeaconFileBin = decrypted_data_filename
-					if fileerr != nil {
-						fmt.Println("file open error:", fileerr)
-					} else {
-						decrypted_data_file.Write(Savedata_buf)
-						defer decrypted_data_file.Close()
-					}
-
-				} else {
-					fmt.Println("create dir error:", direrr)
-				}
-
+				bodyMap = Write_decrypted_data(bodyMap, host)
 			}
 		}
 		var bodyText string = StructToJson(bodyMap)
@@ -362,6 +346,32 @@ func Beaconinit(host string, filename string, t int, IsSave bool) (BodyMap, erro
 	bodyMap.URL = host
 	JsonFileWrite(filename, StructToJson(bodyMap))
 	return nilbodyMap, nil
+}
+
+func Write_decrypted_data(bodyMap BodyMap, host string) BodyMap {
+	var ipport string
+	dirint, direrr := CreateDir("./data")
+	if dirint == 2 || dirint == 0 {
+		fileipport := strings.Split(host, "//")
+		if len(fileipport) == 2 {
+			ipport = fileipport[1]
+		} else {
+			ipport = host
+		}
+		decrypted_data_filename := ipport + ":" + strconv.Itoa(bodyMap.Beaconconfig.CobaltStrikeVersion) + ":" + fmt.Sprint(time.Now().Unix()) + ".bin"
+		decrypted_data_file, fileerr := os.OpenFile("./data/"+decrypted_data_filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		bodyMap.BeaconFileBin = decrypted_data_filename
+		if fileerr != nil {
+			fmt.Println("file open error:", fileerr)
+		} else {
+			decrypted_data_file.Write(Savedata_buf)
+			defer decrypted_data_file.Close()
+			return bodyMap
+		}
+	} else {
+		fmt.Println("create dir error:", direrr)
+	}
+	return bodyMap
 }
 
 // 创建文件夹
