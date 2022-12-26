@@ -412,6 +412,7 @@ func HasDir(path string) (bool, error) {
 func Beacon_config(buf []byte) BeaconConfig {
 	var beaconconfig BeaconConfig
 	for _, value := range SUPPORTED_VERSIONS {
+		//re_start_match
 		if value == 3 {
 			var offset int
 			var offset1 int
@@ -433,19 +434,22 @@ func Beacon_config(buf []byte) BeaconConfig {
 		} else if value == 4 {
 			var offset int
 			var offset1 int
-			var offset2 int
-			offset = bytes.Index(buf, []byte("\x2e\x2f\x2e\x2f\x2e\x2c")) //4的兼容
+			//var offset2 int
+			//合并https://github.com/Sentinel-One/CobaltStrikeParser/pull/20 
+			offset = bytes.Index(buf, []byte("\x2e\x2f\x2e\x2f\x2e"))
+			//offset = bytes.Index(buf, []byte("\x2e\x2f\x2e\x2f\x2e\x2c")) //4的兼容
 			if offset != -1 {
-				offset1 = bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x2e\x2c\x2e\x2f\x2e\x2c"))
+				offset1 = bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x2e\x2c\x2e\x2f"))
+				//offset1 = bytes.Index(buf[offset:bytes.Count(buf, nil)-1], []byte("\x2e\x2c\x2e\x2f\x2e\x2c"))
 				if offset1 != -1 {
-					offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
-					if offset2 != -1 {
-						beaconconfig = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
-						if beaconconfig.C2Server != "" {
-							beaconconfig.CobaltStrikeVersion = 4
-						}
-						return beaconconfig
+					//offset2 = bytes.Index(buf[offset : bytes.Count(buf, nil)-1][offset1:bytes.Count(buf[offset:bytes.Count(buf, nil)-1], nil)-1], []byte("\x2e"))
+					//if offset2 != -1 {
+					beaconconfig = BeaconSettings(decode_config(buf[offset:bytes.Count(buf, nil)-1], value))
+					if beaconconfig.C2Server != "" {
+						beaconconfig.CobaltStrikeVersion = 4
 					}
+					return beaconconfig
+					//}
 				}
 			}
 		}
